@@ -33,14 +33,7 @@ const targets = {
   grid: [],
 };
 
-// Temporary sample data.
-// This will be replaced with Google Sheets data in Milestone 5.
-const sampleData = Array.from({ length: 20 }, (_, index) => ({
-  id: index + 1,
-  name: `Company ${index + 1}`,
-  industry: index % 2 === 0 ? 'Technology' : 'Finance',
-  netWorth: (index + 1) * 500000,
-}));
+let peopleData = [];
 
 window.addEventListener('load', initializeGoogleLogin);
 
@@ -145,7 +138,7 @@ function requestSheetsAccess() {
 }
 
 async function handleAccessTokenResponse(tokenResponse) {
-  if (tokenResponse.error) {
+  if (!tokenResponse || tokenResponse.error) {
     console.error(
       'Google authorization failed:',
       tokenResponse
@@ -154,6 +147,11 @@ async function handleAccessTokenResponse(tokenResponse) {
   }
 
   accessToken = tokenResponse.access_token;
+
+  if (!accessToken) {
+    console.error('No Google access token was returned.');
+    return;
+  }
 
   console.log('Sheets access granted.');
 
@@ -167,7 +165,12 @@ async function handleAccessTokenResponse(tokenResponse) {
   }
 
   try {
-    await testGoogleSheetsConnection();
+    const rows = await testGoogleSheetsConnection();
+
+    peopleData = convertRowsToPeople(rows);
+
+    console.log('Converted people:', peopleData);
+    console.log('People count:', peopleData.length);
 
     if (!animationStarted) {
       init();
@@ -218,6 +221,88 @@ async function testGoogleSheetsConnection() {
   return data.values ?? [];
 }
 
+function convertRowsToPeople(rows) {
+  if (!Array.isArray(rows) || rows.length < 2) {
+    throw new Error(
+      'The Google Sheet does not contain any data rows.'
+    );
+  }
+
+  const headers = rows[0].map((header) =>
+    String(header).trim()
+  );
+
+  return rows
+    .slice(1)
+    .filter((row) =>
+      row.some((cell) => String(cell).trim() !== '')
+    )
+    .map((row, index) => {
+      const record = {};
+
+      headers.forEach((header, columnIndex) => {
+        record[header] = row[columnIndex] ?? '';
+      });
+
+      return {
+        id: index + 1,
+        name: String(
+          record.Name || 'Unknown'
+        ).trim(),
+        photo: String(
+          record.Photo || ''
+        ).trim(),
+        age: Number(record.Age) || 0,
+        country: String(
+          record.Country || 'Unknown'
+        ).trim(),
+        interest: String(
+          record.Interest || 'Unknown'
+        ).trim(),
+        netWorth: parseNetWorth(
+          record['Net Worth']
+        ),
+      };
+    });
+}
+
+function parseNetWorth(value) {
+  if (value === null || value === undefined) {
+    return 0;
+  }
+
+  const cleanedValue = String(value)
+    .replace(/[$,\s]/g, '')
+    .trim();
+
+  const parsedValue = Number(cleanedValue);
+
+  return Number.isFinite(parsedValue)
+    ? parsedValue
+    : 0;
+}
+
+function formatNetWorth(value) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function getNetWorthClass(netWorth) {
+  if (netWorth < 100000) {
+    return 'net-worth-low';
+  }
+
+  if (netWorth <= 500000) {
+    return 'net-worth-medium';
+  }
+
+  return 'net-worth-high';
+}
+
 function decodeJwtResponse(token) {
   const base64Url = token.split('.')[1];
 
@@ -251,6 +336,8 @@ function signOut() {
 }
 
 function init() {
+  clearExistingSceneData();
+
   camera = new THREE.PerspectiveCamera(
     40,
     window.innerWidth / window.innerHeight,
@@ -269,7 +356,10 @@ function init() {
   createGridTargets();
 
   renderer = new CSS3DRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
 
   document
     .getElementById('app')
@@ -281,7 +371,7 @@ function init() {
   );
 
   controls.minDistance = 500;
-  controls.maxDistance = 6000;
+  controls.maxDistance = 10000;
   controls.addEventListener('change', render);
 
   document
@@ -317,27 +407,66 @@ function init() {
   transform(targets.table, 1500);
 }
 
+function clearExistingSceneData() {
+  objects.length = 0;
+
+  targets.table.length = 0;
+  targets.sphere.length = 0;
+  targets.helix.length = 0;
+  targets.grid.length = 0;
+
+  const app = document.getElementById('app');
+
+  if (app) {
+    app.innerHTML = '';
+  }
+}
+
 function createCards() {
-  sampleData.forEach((company) => {
+  peopleData.forEach((person) => {
     const card = document.createElement('div');
-    card.className = 'element';
+
+    card.className = [
+      'element',
+      getNetWorthClass(person.netWorth),
+    ].join(' ');
 
     const number = document.createElement('div');
     number.className = 'number';
-    number.textContent = company.id;
+    number.textContent = person.id;
     card.appendChild(number);
+
+    const photo = document.createElement('img');
+    photo.className = 'person-photo';
+    photo.alt = person.name;
+    photo.loading = 'lazy';
+
+    photo.src =
+      person.photo ||
+      'https://placehold.co/100x100?text=No+Photo';
+
+    photo.addEventListener('error', () => {
+      if (!photo.src.includes('placehold.co')) {
+        photo.src =
+          'https://placehold.co/100x100?text=No+Photo';
+      }
+    });
+
+    card.appendChild(photo);
 
     const name = document.createElement('div');
     name.className = 'name';
-    name.textContent = company.name;
+    name.textContent = person.name;
     card.appendChild(name);
 
     const details = document.createElement('div');
     details.className = 'details';
 
     details.innerHTML = `
-      ${company.industry}<br>
-      RM ${company.netWorth.toLocaleString()}
+      <span>Age: ${person.age}</span>
+      <span>Country: ${person.country}</span>
+      <span>Interest: ${person.interest}</span>
+      <strong>${formatNetWorth(person.netWorth)}</strong>
     `;
 
     card.appendChild(details);
@@ -359,7 +488,7 @@ function createCards() {
 }
 
 function createTableTargets() {
-  sampleData.forEach((company, index) => {
+  peopleData.forEach((person, index) => {
     const object = new THREE.Object3D();
 
     const column = index % 5;
@@ -378,18 +507,19 @@ function createTableTargets() {
 function createSphereTargets() {
   const vector = new THREE.Vector3();
 
-  sampleData.forEach((company, index) => {
+  peopleData.forEach((person, index) => {
     const phi = Math.acos(
-      -1 + (2 * index) / sampleData.length
+      -1 + (2 * index) / peopleData.length
     );
 
     const theta =
-      Math.sqrt(sampleData.length * Math.PI) * phi;
+      Math.sqrt(peopleData.length * Math.PI) *
+      phi;
 
     const object = new THREE.Object3D();
 
     object.position.setFromSphericalCoords(
-      800,
+      1400,
       phi,
       theta
     );
@@ -407,17 +537,17 @@ function createSphereTargets() {
 function createHelixTargets() {
   const vector = new THREE.Vector3();
 
-  sampleData.forEach((company, index) => {
+  peopleData.forEach((person, index) => {
     const theta =
-      index * 0.5 + Math.PI;
+      index * 0.35 + Math.PI;
 
     const y =
-      -(index * 35) + 350;
+      -(index * 22) + 2200;
 
     const object = new THREE.Object3D();
 
     object.position.setFromCylindricalCoords(
-      700,
+      900,
       theta,
       y
     );
@@ -438,7 +568,7 @@ function createHelixTargets() {
 }
 
 function createGridTargets() {
-  sampleData.forEach((company, index) => {
+  peopleData.forEach((person, index) => {
     const object = new THREE.Object3D();
 
     object.position.x =
@@ -450,7 +580,8 @@ function createGridTargets() {
       450;
 
     object.position.z =
-      Math.floor(index / 20) * 700;
+      Math.floor(index / 20) * 700 -
+      3150;
 
     targets.grid.push(object);
   });
@@ -523,9 +654,16 @@ function animate() {
   requestAnimationFrame(animate);
 
   TWEEN.update();
-  controls.update();
+
+  if (controls) {
+    controls.update();
+  }
 }
 
 function render() {
+  if (!renderer || !scene || !camera) {
+    return;
+  }
+
   renderer.render(scene, camera);
 }
