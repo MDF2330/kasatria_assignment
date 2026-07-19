@@ -345,7 +345,7 @@ function init() {
     10000
   );
 
-  camera.position.z = 3000;
+  camera.position.z = 5200;
 
   scene = new THREE.Scene();
 
@@ -488,17 +488,25 @@ function createCards() {
 }
 
 function createTableTargets() {
+  const columns = 20;
+  const horizontalSpacing = 190;
+  const verticalSpacing = 250;
+
   peopleData.forEach((person, index) => {
     const object = new THREE.Object3D();
 
-    const column = index % 5;
-    const row = Math.floor(index / 5);
+    const column = index % columns;
+    const row = Math.floor(index / columns);
 
     object.position.x =
-      column * 300 - 600;
+      (column - (columns - 1) / 2) *
+      horizontalSpacing;
 
     object.position.y =
-      -(row * 220) + 330;
+      ((10 - 1) / 2 - row) *
+      verticalSpacing;
+
+    object.position.z = 0;
 
     targets.table.push(object);
   });
