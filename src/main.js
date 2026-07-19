@@ -292,15 +292,15 @@ function formatNetWorth(value) {
 }
 
 function getNetWorthClass(netWorth) {
-  if (netWorth < 100000) {
-    return 'net-worth-low';
+  if (netWorth > 200000) {
+    return 'net-worth-high';    
   }
 
-  if (netWorth <= 500000) {
-    return 'net-worth-medium';
+  if (netWorth > 100000) {
+    return 'net-worth-medium';   
   }
 
-  return 'net-worth-high';
+  return 'net-worth-low';         
 }
 
 function decodeJwtResponse(token) {
@@ -552,11 +552,7 @@ function createHelixTargets() {
   peopleData.forEach((person, index) => {
     const object = new THREE.Object3D();
 
-    // Even = left strand
-    // Odd = right strand
     const strand = index % 2;
-
-    // Position within each strand
     const level = Math.floor(index / 2);
 
     const theta =

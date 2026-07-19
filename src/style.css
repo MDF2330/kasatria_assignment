@@ -35,15 +35,15 @@ body {
 }
 
 .net-worth-low {
-  background: rgba(190, 35, 45, 0.88);
+  background: #d32f2f;
 }
 
 .net-worth-medium {
-  background: rgba(220, 120, 20, 0.88);
+  background: #f57c00;
 }
 
 .net-worth-high {
-  background: rgba(30, 145, 75, 0.88);
+  background: #2e7d32;
 }
 
 .number {
