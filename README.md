@@ -1,10 +1,27 @@
-# Kasatria Software Developer Assignment
+# Kasatria Technologies Assignment
 
-This project is created for the Kasatria Technologies preliminary assignment.
+A 3D data visualization web application built using Three.js, Google Sign-In, and Google Sheets API.
 
-## Technologies
+## Features
 
-- JavaScript
-- Three.js
-- Google Sheets API
 - Google Sign-In
+- Google Sheets Integration
+- 3D CSS3D Visualization
+- Table Layout (20 × 10)
+- Sphere Layout
+- Double Helix Layout
+- Grid Layout (5 × 4 × 10)
+- Net Worth Color Indicator
+
+## Tech Stack
+
+- Vite
+- Three.js
+- Google Identity Services
+- Google Sheets API
+- JavaScript
+- HTML & CSS
+
+## Live Demo
+
+https://kasatria-assignment1.vercel.app
