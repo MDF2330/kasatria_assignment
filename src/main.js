@@ -545,29 +545,38 @@ function createSphereTargets() {
 function createHelixTargets() {
   const vector = new THREE.Vector3();
 
+  const radius = 900;
+  const verticalSpacing = 28;
+  const angleStep = 0.35;
+
   peopleData.forEach((person, index) => {
-    const theta =
-      index * 0.35 + Math.PI;
-
-    const y =
-      -(index * 22) + 2200;
-
     const object = new THREE.Object3D();
 
+    // Even = left strand
+    // Odd = right strand
+    const strand = index % 2;
+
+    // Position within each strand
+    const level = Math.floor(index / 2);
+
+    const theta =
+      level * angleStep +
+      (strand === 0 ? 0 : Math.PI);
+
+    const y =
+      -(level * verticalSpacing) + 1400;
+
     object.position.setFromCylindricalCoords(
-      900,
+      radius,
       theta,
       y
     );
 
-    vector.x =
-      object.position.x * 2;
-
-    vector.y =
-      object.position.y;
-
-    vector.z =
-      object.position.z * 2;
+    vector.set(
+      object.position.x * 2,
+      object.position.y,
+      object.position.z * 2
+    );
 
     object.lookAt(vector);
 
@@ -576,20 +585,29 @@ function createHelixTargets() {
 }
 
 function createGridTargets() {
+  const columns = 5;
+  const rows = 4;
+  const layers = 10;
+
+  const xSpacing = 400;
+  const ySpacing = 300;
+  const zSpacing = 700;
+
   peopleData.forEach((person, index) => {
     const object = new THREE.Object3D();
 
+    const column = index % columns;
+    const row = Math.floor(index / columns) % rows;
+    const layer = Math.floor(index / (columns * rows));
+
     object.position.x =
-      (index % 5) * 400 - 800;
+      (column - (columns - 1) / 2) * xSpacing;
 
     object.position.y =
-      -(Math.floor(index / 5) % 4) *
-        300 +
-      450;
+      ((rows - 1) / 2 - row) * ySpacing;
 
     object.position.z =
-      Math.floor(index / 20) * 700 -
-      3150;
+      (layer - (layers - 1) / 2) * zSpacing;
 
     targets.grid.push(object);
   });
