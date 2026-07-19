@@ -174,3 +174,39 @@ button:hover {
   cursor: default;
   opacity: 0.7;
 }
+
+.networth-indicator {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 6px 10px;
+
+    border: 1px solid rgba(255,255,255,.25);
+    background: rgba(10,15,20,.75);
+    backdrop-filter: blur(6px);
+
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+
+    z-index: 9999;
+}
+
+.networth-bar {
+    width: 120px;
+    height: 10px;
+
+    background: linear-gradient(
+        90deg,
+        #d32f2f 0%,
+        #fb8c00 50%,
+        #43a047 100%
+    );
+
+    border-radius: 2px;
+}
